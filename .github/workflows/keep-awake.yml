@@ -1,12 +1,95 @@
+# ============================================================
+# 🌾 مهمات زراعية - Keep Supabase Awake
+# GitHub Actions Workflow
+# ============================================================
+# هذا الملف يبقي مشروع Supabase Free مستيقظاً
+# يرسل "ping" كل 5 أيام لمنع التوقف التلقائي
+# ============================================================
+
 name: Keep Supabase Awake
+
+# متى يعمل؟
 on:
+  # ⏰ يعمل تلقائياً كل 5 أيام الساعة 9:00 صباحاً UTC
   schedule:
-    - cron: '0 9 */5 * *'
+    - cron: "0 9 */5 * *"
+
+  # 🖱️ يمكن تشغيله يدوياً من صفحة Actions
   workflow_dispatch:
 
-jobs:
-  ping:
-    runs-on: ubuntu-latest
-    steps:
-      - run: csb_publishable_QgoiIx49ZIZF8DGK4YYe4g_eUN2-JX3
+# الصلاحيات المطلوبة
+permissions:
+  contents: read
 
+jobs:
+  # ============================================
+  # المهمة الأولى: Ping قاعدة البيانات
+  # ============================================
+  ping-database:
+    name: Ping Supabase Database
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📡 Ping Database (REST API)
+        run: |
+          echo "🌾 Sending ping to Supabase Database..."
+
+          # إرسال طلب GET لجدول projects
+          # هذا يُعتبر "نشاط" ويمنع التوقف التلقائي
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}"             -H "apikey: ${{sb_publishable_QgoiIx49ZIZF8DGK4YYe4g_eUN2-JX3}}"             -H "Authorization: Bearer ${{sb_publishable_QgoiIx49ZIZF8DGK4YYe4g_eUN2-JX3}}"             "${{sb_secret_1lrscHzAgecw0lglk9A6sA_66WQsoSB}}/rest/v1/projects?select=id&limit=1")
+
+          echo "📊 Database Response Code: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ]; then
+            echo "✅ Database is awake and responding!"
+          else
+            echo "⚠️ Unexpected response: $HTTP_CODE"
+          fi
+
+  # ============================================
+  # المهمة الثانية: Ping Edge Functions (إن وجدت)
+  # ============================================
+  ping-functions:
+    name: Ping Supabase Functions
+    runs-on: ubuntu-latest
+    needs: ping-database
+
+    steps:
+      - name: ⚡ Ping Edge Functions
+        run: |
+          echo "🌾 Sending ping to Supabase Edge Functions..."
+
+          # محاولة ping أي Edge Function موجودة
+          # إذا لم تكن لديك Edge Functions، سيتجاهل هذا الخطوة
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}"             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"             "${{ secrets.SUPABASE_URL }}/functions/v1/hello" || echo "000")
+
+          echo "📊 Functions Response Code: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "404" ]; then
+            echo "✅ Functions endpoint is reachable!"
+          else
+            echo "ℹ️ No functions found or endpoint not configured (this is OK)"
+          fi
+
+  # ============================================
+  # المهمة الثالثة: Ping Storage (إن وجد)
+  # ============================================
+  ping-storage:
+    name: Ping Supabase Storage
+    runs-on: ubuntu-latest
+    needs: ping-database
+
+    steps:
+      - name: 📦 Ping Storage Buckets
+        run: |
+          echo "🌾 Sending ping to Supabase Storage..."
+
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}"             -H "apikey: ${{sb_publishable_QgoiIx49ZIZF8DGK4YYe4g_eUN2-JX3}}"             -H "Authorization: Bearer ${{sb_publishable_QgoiIx49ZIZF8DGK4YYe4g_eUN2-JX3}}"             "${{sb_secret_1lrscHzAgecw0lglk9A6sA_66WQsoSB}}/storage/v1/bucket")
+
+          echo "📊 Storage Response Code: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ]; then
+            echo "✅ Storage is awake and responding!"
+          else
+            echo "ℹ️ Storage ping status: $HTTP_CODE"
+          fi
