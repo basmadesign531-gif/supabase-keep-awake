@@ -2,8 +2,8 @@ name: Keep Supabase Awake
 
 on:
   schedule:
-    - cron: '0 */4 * * *' # يعمل تلقائياً كل 4 ساعات
-  workflow_dispatch: # يتيح لك تشغيله يدوياً
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
 
 jobs:
   ping:
@@ -11,6 +11,6 @@ jobs:
     steps:
       - name: Pinging Database
         run: |
-          curl -i -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/projects?select=id&limit=1" \
+          curl -i -X GET "https://nivcbqduduqvjtdkotrt.supabase.co" \
           -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
           -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
