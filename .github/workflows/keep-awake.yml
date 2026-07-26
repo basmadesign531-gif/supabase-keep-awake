@@ -8,5 +8,5 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - run: curl https://sb_publishable_QgoiIx49ZIZF8DGK4YYe4g_eUN2-JX3
+      - run: csb_publishable_QgoiIx49ZIZF8DGK4YYe4g_eUN2-JX3
 
